@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spam Mail Detector</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg-light: #e0f7fa; /* 🌤️ Sky Blue Background */
+      --bg-dark: #121212;
+      --text-light: #121212;
+      --text-dark: #f1f1f1;
+      --primary: #4CAF50;
+      --accent: #f44336;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-light);
+      margin: 0;
+      padding: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    body.dark-mode {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .dark-mode .container {
+      background: rgba(30, 30, 30, 0.85);
+    }
+
+    h1 {
+      font-size: 2em;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .typewriter::after {
+      content: '';
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      resize: none;
+      font-size: 1em;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      margin-top: 1rem;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 1.5em;
+    }
+
+    .emoji {
+      font-size: 3rem;
+      margin-top: 0.5rem;
+    }
+
+    #theme-toggle {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+
+    #mic {
+      position: absolute;
+      right: 25px;
+      top: 220px;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <button id="theme-toggle">🌙</button>
+
+  <div class="container">
+    <h1><span id="typewriter" class="typewriter"></span></h1>
+
+    <label for="email">Enter Email Message:</label>
+    <div style="position: relative;">
+      <textarea id="email" placeholder="Type or use the mic..."></textarea>
+      <span id="mic" title="Speak your message">🎤</span>
+    </div>
+
+    <button onclick="checkSpam()">Check Spam</button>
+
+    <div id="result"></div>
+    <div class="emoji" id="emoji"></div>
+  </div>
+
+  <script>
+    // 🌗 Theme Toggle
+    const toggle = document.getElementById('theme-toggle');
+    toggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      toggle.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+    });
+
+    // 🎯 Typewriter
+    const text = "Detect Spam in Seconds... 🚀";
+    let i = 0;
+    function typeWriter() {
+      if (i < text.length) {
+        document.getElementById('typewriter').innerHTML += text.charAt(i);
+        i++;
+        setTimeout(typeWriter, 100);
+      }
+    }
+    typeWriter();
+
+    // 📬 Spam Check
+    async function checkSpam() {
+      const email = document.getElementById("email").value.trim();
+      if (!email) {
+        alert("Please enter a message.");
+        return;
+      }
+
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json();
+      const resultEl = document.getElementById("result");
+      const emojiEl = document.getElementById("emoji");
+
+      if (data.result === "Spam") {
+        resultEl.innerText = "🚨 Detected as Spam!";
+        resultEl.style.color = "red";
+        emojiEl.innerText = "😡";
+      } else if (data.result === "Not Spam") {
+        resultEl.innerText = "✅ Not Spam!";
+        resultEl.style.color = "green";
+        emojiEl.innerText = "😄";
+      } else {
+        resultEl.innerText = data.result || "Error!";
+        emojiEl.innerText = "🤔";
+      }
+    }
+
+    // 🎤 Speech to Text
+    const mic = document.getElementById("mic");
+    mic.addEventListener("click", () => {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = "en-US";
+      recognition.onresult = (event) => {
+        document.getElementById("email").value = event.results[0][0].transcript;
+      };
+      recognition.onerror = () => alert("Speech recognition failed. Try again.");
+      recognition.start();
+    });
+  </script>
+</body>
+</html>
