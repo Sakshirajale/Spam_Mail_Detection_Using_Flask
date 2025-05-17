@@ -16,5 +16,4 @@ An intelligent spam mail detection web application using **Python**, **Flask**, 
 
 ---
 
-## 📂 Project Structure
 
